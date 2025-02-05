@@ -96,6 +96,6 @@ ggplot(df_monthly_summary, aes(x = YearMonth, y = Monthly_Price)) +
   geom_point(color = "red") +
   labs(title = "Monthly Total of Purchases", x = "Month", y = "Total Revenu") +
   theme_minimal()
-
+gi
 df <- df %>% select(-UID)
 df <- df %>% select(-PID)
