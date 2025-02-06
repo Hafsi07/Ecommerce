@@ -4,7 +4,12 @@ library(ggplot2)
 library(DataExplorer)
 library(caret)
 library(forecast)
-
+library(tseries)
+library(prophet)
+library(reticulate)
+library(tensorflow)
+library(keras)
+library(tidyverse)
 
 df <- read.csv("ecommerceData.csv")
 colnames(df)<-c('UID','PID','Category','Price','Discount','FP','PM','Date')
@@ -99,3 +104,42 @@ ggplot(df_monthly_summary, aes(x = YearMonth, y = Monthly_Price)) +
 gi
 df <- df %>% select(-UID)
 df <- df %>% select(-PID)
+
+
+df_summary$Date <- as.Date(df_summary$Date)
+ts_data <- ts(df_summary$Total_Price, start = c(year(min(df$Date)), month(min(df$Date))), frequency = 7)
+
+acf(ts_data)
+pacf(ts_data)
+
+adf_test <- adf.test(ts_data)
+print(adf_test)
+
+kpss_test <- kpss.test(ts_data)
+print(kpss_test)
+
+fit <- auto.arima(ts_data)
+summary(fit)
+
+ets_model <- ets(ts_data)
+summary(ets_model)
+
+sarima_model <- auto.arima(ts_data, seasonal = TRUE)
+summary(sarima_model)
+
+tbats_model <- tbats(ts_data)
+summary(tbats_model)
+
+
+df_prophet <- df_summary %>%
+  rename(ds = Date, y = Total_Price)
+
+prophet_model <- prophet(df_prophet)
+future <- make_future_dataframe(prophet_model, periods = 30)
+forecast_prophet <- predict(prophet_model, future)
+plot(prophet_model, forecast_prophet)
+prophet_plot_components(prophet_model, forecast_prophet)
+
+
+install_tensorflow()
+install_keras()
