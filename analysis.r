@@ -28,10 +28,10 @@ length(unique(df[,1]))
 # unique products
 length(unique(df[,2]))
 
-# unique categories 
+# unique categories
 unique(df[,3])
 
-# unique payment methods 
+# unique payment methods
 unique(df[,'PM'])
 
 # unique Discount values
@@ -101,7 +101,7 @@ ggplot(df_monthly_summary, aes(x = YearMonth, y = Monthly_Price)) +
   geom_point(color = "red") +
   labs(title = "Monthly Total of Purchases", x = "Month", y = "Total Revenu") +
   theme_minimal()
-gi
+
 df <- df %>% select(-UID)
 df <- df %>% select(-PID)
 
@@ -143,3 +143,30 @@ prophet_plot_components(prophet_model, forecast_prophet)
 
 install_tensorflow()
 install_keras()
+
+
+normalize <- function(x) (x - min(x)) / (max(x) - min(x))
+df_summary$Total_Price <- normalize(df_summary$Total_Price)
+
+ts_data <- ts(df_summary$Total_Price, frequency = 365)
+train_size <- floor(0.8 * length(ts_data))
+train_data <- ts_data[1:train_size]
+test_data <- ts_data[(train_size + 1):length(ts_data)]
+
+create_sequences <- function(data, n_steps) {
+  x <- NULL
+  y <- NULL
+  for (i in 1:(length(data) - n_steps)) {
+    x <- rbind(x, data[i:(i + n_steps - 1)])
+    y <- c(y, data[i + n_steps])
+  }
+  return(list(x = array(x, dim = c(nrow(x), n_steps, 1)), y = y))
+}
+
+train_seq <- create_sequences(train_data, 10)
+
+test_seq <- create_sequences(test_data, 10)
+
+model <- keras_model_sequential() %>%
+  layer_lstm(units = 50, input_shape = c(n_steps, 1), return_sequences = FALSE) %>%
+  layer_dense(units = 1)
